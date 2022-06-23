@@ -29,7 +29,7 @@ class Report():
     
     Attributes:
         _id: mongoDB generated id.
-        report_id: str, unique id of the report.
+        report_id: int, unique id of the report.
         creation_time: datetime, date of creation.
         status: str, status of the report.
         component: str, component of the report.
@@ -39,7 +39,7 @@ class Report():
     """
 
     def __init__(self, 
-                report_id: str, creation_time: datetime,
+                report_id: int, creation_time: datetime,
                 status: str, component: str, dupe_of: int,
                 summary: str, comments: list, _id: int = None):
         # mongoDB will generate an extra field self._id when created
@@ -51,6 +51,9 @@ class Report():
         self.dupe_of = dupe_of
         self.summary = summary
         self.comments = comments
+
+    def __str__(self):
+        return f"Report {self.report_id} (dupe of {self.dupe_of}) - {self.summary}"
     
     @classmethod
     def get(cls, report_id: int) -> 'Report':
@@ -97,7 +100,7 @@ class Report():
     
     @classmethod
     def insert(cls,
-            report_id: str, creation_time: datetime,
+            report_id: int, creation_time: datetime,
             status: str, component: str, dupe_of: int,
             summary: str, comments: list) -> 'Report':
         """
