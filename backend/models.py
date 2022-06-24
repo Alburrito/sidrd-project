@@ -139,6 +139,17 @@ class Report():
             )
         return report
 
+    @classmethod
+    def create_many(cls, reports: list) -> int:
+        """
+        Create many reports in the database.
+        Args:
+            reports: list of reports to create. (dicts)
+        Returns:
+            The number of reports created.
+        """
+        to_insert = [cls(**report) for report in reports]
+        return reports_collection.insert_many(to_insert).inserted_ids
 
     @classmethod
     def update(cls) -> 'Report':
