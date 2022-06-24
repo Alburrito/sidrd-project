@@ -15,7 +15,15 @@ Esta base de datos es ahora accesible en la dirección `http://localhost:27017/`
 
 ## Scrapear reportes
 
-...
+Rellenar un fichero .csv con la configuración del scraper (ver scraper_config.csv.example para un ejemplo).
+
+Teniendo la base de datos levantada, ejecutar:
+   
+   ```bash
+   python3 scraper.py path/to/scraper_config.csv
+   ```
+
+Se guardarán los reportes en la base de datos y aparecerán los resultados de cada lote en un fichero .csv nuevo.
 
 ## CRUD reportes
 

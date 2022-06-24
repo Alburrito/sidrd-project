@@ -2,6 +2,7 @@
 from datetime import datetime
 
 from models import Report
+from exceptions import ReportAlreadyExists
 
 # CRUD Reports
 
@@ -61,6 +62,28 @@ def create_report(report_id: int, creation_time: datetime,
                         summary, comments) # May raise ReportAlreadyExists
     return report
 
+def create_many_reports(reports: list) -> int:
+    """
+    Create many reports in the database.
+    Args:
+        reports: list of reports (Report)
+    Returns:
+        reports: number of reports created.
+    Example:
+        >>> reports = create_many_reports([{'report_id': 1, 'creation_time': ...}, ...])
+    """
+    inserted_reports = 0
+    for report in reports:
+        try:
+            create_report(report.report_id, report.creation_time, 
+                            report.status, report.component, report.dupe_of, 
+                            report.summary, report.comments) # May raise ReportAlreadyExists
+            inserted_reports += 1
+        except ReportAlreadyExists:
+            pass
+    
+    return inserted_reports
+
 def update_report(_id: int, report_id: int, creation_time: datetime,
                 status: str, component: str, dupe_of: int,
                 summary: str, comments: list) -> Report:
@@ -108,3 +131,4 @@ def delete_all_reports() -> int:
         >>> num_deleted = delete_all_reports()
     """
     return Report.delete_all() # May raise NoReportsFound
+
