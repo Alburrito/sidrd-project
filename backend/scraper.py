@@ -5,7 +5,7 @@ import csv
 from datetime import datetime
 from bugzilla import Bugzilla
 
-from controllers import create_many_reports
+from controllers import create_many_reports, delete_report
 from models import Report
 
 BUGZILLA_API_KEY = os.environ.get('BUGZILLA_API_KEY', '')
@@ -54,9 +54,12 @@ class Scraper():
         Returns:
             reports: list of reports (Report)
         """
-        scraped_reports = self.bugzilla.search_bugs(terms)
-        parsed_reports = [self._parse_report(scraped_report) for scraped_report in scraped_reports['bugs']]
-        return parsed_reports
+        try:
+            scraped_reports = self.bugzilla.search_bugs(terms)
+            parsed_reports = [self._parse_report(scraped_report) for scraped_report in scraped_reports['bugs']]
+            return parsed_reports
+        except Exception as e:
+            return None
 
     def _scrape_report(self, report_id: int) -> Report:
         """
@@ -68,8 +71,28 @@ class Scraper():
         Example:
             >>> report = self._scrape_report(12345)
         """
-        scraped_report = self.bugzilla.get_bug(report_id)
-        return self._parse_report(scraped_report)
+        try:
+            scraped_report = self.bugzilla.get_bug(report_id)
+            return self._parse_report(scraped_report)
+        except Exception as e:
+            return None
+    
+    def _scrape_master_report(self, report_id: int) -> Report:
+        """
+        Scrape Bugzilla for the master of a given report.
+        If the retrieved report is duplicated, returns the corresponding master.
+        Args:
+            report_id: id of the report to scrape.
+        Returns:
+            report: master report
+        Example:
+            >>> report = self._scrape_master_report(12345)
+        """
+        report = self._scrape_report(report_id)
+        if report and report.dupe_of:
+            return self._scrape_master_report(report.dupe_of)
+        return report
+
     
     def _scrape_comments(self, report_id: int) -> list:
         """
@@ -81,8 +104,11 @@ class Scraper():
         Example:
             >>> comments = self._scrape_comments(12345)
         """
-        scraped_comments = self.bugzilla.get_comments(report_id)
-        return scraped_comments['bugs'][str(report_id)]['comments']
+        try:
+            scraped_comments = self.bugzilla.get_comments(report_id)
+            return scraped_comments['bugs'][str(report_id)]['comments']
+        except Exception as e:
+            return None
 
     def _get_scraper_config(self, row: list) -> list:
         """
@@ -94,7 +120,6 @@ class Scraper():
         Example:
             >>> terms = self._get_scraper_config('scraper_config.csv')
         """
-        # import ipdb; ipdb.set_trace()
         terms = [
             {'limit': row[0]},
             {'product': row[1]}
@@ -125,11 +150,11 @@ class Scraper():
             print("Invalid path") # TODO: change to exception
             sys.exit(1)
             
-        result = {'master': 0, 'duplicate': 0}
+        result = {'master': 0, 'duplicate': 0} # Global result (all configs)
 
         path_no_extension = scraper_config_path.split('.')[0]
         results_path = f'{path_no_extension}_results.csv'
-        with open(results_path, 'a') as results_file:
+        with open(results_path, 'w') as results_file:
             # Set column names
             writer = csv.writer(results_file)
             writer.writerow([
@@ -140,13 +165,15 @@ class Scraper():
         with open(scraper_config_path, 'r') as csvfile:
             reader = csv.reader(csvfile)
             for row in reader:
+                # Each config (row) results
                 row_master_created = 0
                 row_duplicate_created = 0
 
-
                 terms = self._get_scraper_config(row)
+                print(f"[*] Scraping for {terms}...")
                 reports = self._scrape_reports(terms)
                 num_created = create_many_reports(reports)
+                print(f"[+] Found {len(reports)} reports. Created {num_created} reports")
                 
                 if row[2] == 'master':
                     row_master_created = num_created
@@ -156,20 +183,39 @@ class Scraper():
                     result['duplicate'] += num_created
 
                     # Search for the duplicate report
+                    print(f"[*] Searching for master reports for duplicate ones...")
                     master_reports = []
                     for report in reports:
+                        report_idx = reports.index(report) + 1
+                        if report_idx % (len(reports) // 10) == 0:
+                            print(f"[*] {report_idx}/{len(reports)}")
+
                         if report.dupe_of: # Should have one
-                            duplicate_report = self._scrape_report(report.dupe_of)
-                            master_reports.append(duplicate_report)
+                            master_report = self._scrape_master_report(report.dupe_of)
+                            if master_report:
+                                master_reports.append(master_report)
+                            else:
+                                print(f"[!] Could not get master report {report.dupe_of}. Deleting duplicated report {report.report_id}")
+                                delete_report(report.report_id)
+                                row_duplicate_created -= 1
+                                result['duplicate'] -= 1
+                        else:
+                            print(f"[!] Report {report.report_id} does not have a dupe_of. Deleting...")
+                            delete_report(report.report_id)
+                            row_duplicate_created -= 1
+                            result['duplicate'] -= 1
                     
                     row_master_created = create_many_reports(master_reports)
+                    print(f"[+] Found {len(master_reports)} master reports. Created {row_master_created} reports")
                     result['master'] += row_master_created
 
-
+                print("\n")
                 with open(results_path, 'a') as resultscsvfile:
                     writer = csv.writer(resultscsvfile)
-                    writer.writerow([row[0], row[1], row[2], row[3], row_master_created, row_duplicate_created])
+                    writer.writerow([row[0], row[1], row[2], row[3], max(0,row_master_created), max(0,row_duplicate_created)])
 
+        result['master'] = max(0, result['master'])
+        result['duplicate'] = max(0, result['duplicate'])
         return result
     
 if __name__ == "__main__":
@@ -180,8 +226,9 @@ if __name__ == "__main__":
 
     print("Scraping Bugzilla for reports...")
     path = sys.argv[1]
-    print(f"[*] Scraper config: {path}")
+    print(f"[+] Scraper config: {path}\n")
     scraper = Scraper()
     result = scraper.scrape(path)
-    print(f"[*] Scraped {result['master']} master reports and {result['duplicate']} duplicate reports.")
-    print("Done.\n")
+    print("\n[+] FINISHED")
+    print(f"[+] Scraped {result['master']} master reports and {result['duplicate']} duplicate reports.")
+    print(f"[+] Total reports: {result['master'] + result['duplicate']}")

@@ -110,17 +110,17 @@ def update_report(_id: int, report_id: int, creation_time: datetime,
                         summary, comments) # May raise ReportNotFound
     return report
 
-def delete_report(_id: int) -> None:
+def delete_report(report_id: int) -> None:
     """
     Delete a report from the database.
     Args:
-        _id: mongo id of the report.
+        report_id: report_id of the report.
     Exceptions:
         ReportNotFound. If the report does not exist.
     Example:
         >>> delete_report(12345)
     """
-    Report.delete(_id) # May raise ReportNotFound
+    return Report.delete(report_id=report_id) # May raise ReportNotFound
 
 def delete_all_reports() -> int:
     """

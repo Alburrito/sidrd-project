@@ -37,7 +37,7 @@ class ReportNotFound(BaseException):
 
 class ReportAlreadyExists(BaseException):
     """
-    Exception raised when a report already exists (duplicated report_id)
+    Exception raised when a report already exists (duplicate report_id)
     
     Args:
         report_id: id of the report
