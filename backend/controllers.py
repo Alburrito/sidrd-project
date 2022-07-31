@@ -18,7 +18,6 @@ def get_report(report_id: int) -> Report:
     Example:
         >>> report = get_report(12345)
     """
-    # TODO: change to mongo id
     report = Report.get(report_id) # May raise ReportNotFound
     return report
 
@@ -133,4 +132,3 @@ def delete_all_reports() -> int:
         >>> num_deleted = delete_all_reports()
     """
     return Report.delete_all() # May raise NoReportsFound
-

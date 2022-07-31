@@ -35,7 +35,7 @@ class BugzillaBaseScraper():
         for k,v in terms.items():
             if k in AVAILABLE_TERMS:
                 query += f"{k}={v}&"
-        return query[-1] if query else ""
+        return query[:-1] if query else ""
 
     def search_bug_comments(self, bug_id: int) -> dict:
         """

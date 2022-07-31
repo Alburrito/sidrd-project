@@ -13,6 +13,13 @@ Esta base de datos es ahora accesible en la dirección `http://localhost:27017/`
 
 # Uso
 
+Para obtener un mensaje de ayuda, ejecutar, estando en `backend/`:
+
+   ```bash
+   pipenv shell
+   python3 main.py -h
+   ```
+
 ## Scrapear reportes
 
 Rellenar un fichero .csv con la configuración del scraper (ver scraper_config.csv.example para un ejemplo).
@@ -20,10 +27,12 @@ Rellenar un fichero .csv con la configuración del scraper (ver scraper_config.c
 Teniendo la base de datos levantada, ejecutar:
    
    ```bash
-   python3 scraper.py path/to/scraper_config.csv
+   pipenv shell
+   python3 main.py -s <nombre_del_fichero>
    ```
+Este fichero debe encontrarse en la carpeta `backend/scraper/config/`
 
-Se guardarán los reportes en la base de datos y aparecerán los resultados de cada lote en un fichero .csv nuevo.
+Se guardarán los reportes en la base de datos y aparecerán los resultados de cada lote en un fichero .csv nuevo. en la misma carpeta
 
 ## CRUD reportes
 

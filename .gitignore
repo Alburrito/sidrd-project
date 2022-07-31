@@ -135,5 +135,5 @@ data/
 
 ## Testing
 test.py
-scraper_config.csv
-scraper_config_results.csv
+backend/scraper/config/*
+!backend/scraper/config/*.example
