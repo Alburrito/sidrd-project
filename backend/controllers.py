@@ -73,14 +73,16 @@ def create_many_reports(reports: list) -> int:
         >>> reports = create_many_reports([{'report_id': 1, 'creation_time': ...}, ...])
     """
     inserted_reports = 0
-    for report in reports:
-        try:
-            create_report(report.report_id, report.creation_time, 
-                            report.status, report.component, report.dupe_of, 
-                            report.summary, report.comments) # May raise ReportAlreadyExists
-            inserted_reports += 1
-        except ReportAlreadyExists:
-            pass
+
+    if len(reports) > 0:
+        for report in reports:
+            try:
+                create_report(report.report_id, report.creation_time, 
+                                report.status, report.component, report.dupe_of, 
+                                report.summary, report.comments) # May raise ReportAlreadyExists
+                inserted_reports += 1
+            except ReportAlreadyExists:
+                pass
     
     return inserted_reports
 
