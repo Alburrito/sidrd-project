@@ -111,7 +111,7 @@ class Report():
         Exceptions:
             ReportAlreadyExists. If a report with the same report_id already exists.
         Example:
-            >>> report = Report.insert(123, datetime.now(), "DUPLICATED", "component", 23, "summary", ["com1", "com2"...])
+            >>> report = Report.insert(123, datetime.now(), "DUPLICATE", "component", 23, "summary", ["com1", "com2"...])
         """
         try:
             report = cls.get(report_id)
@@ -156,8 +156,24 @@ class Report():
         pass
 
     @classmethod
-    def delete(cls) -> int:
-        pass
+    def delete(cls, report_id: int) -> int:
+        """
+        Delete a report from the database.
+        Args:
+            report_id: report_id of the report to delete. (not mongoDB id)
+        Returns:
+            The number of reports deleted.
+        Exceptions:
+            ReportNotFound. If the report does not exist.
+        Example:
+            >>> num_reports = Report.delete(12345)
+        """
+        num_deleted = reports_collection.delete_one({"report_id": report_id})
+        if num_deleted == 0:
+            raise ReportNotFound(report_id)
+
+        return num_deleted
+        
 
     @classmethod
     def delete_all(cls) -> int:
