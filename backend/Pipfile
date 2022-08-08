@@ -9,6 +9,7 @@ requests = "*"
 
 [dev-packages]
 ipdb = "*"
+pandas = "*"
 
 [requires]
 python_version = "3.8"
