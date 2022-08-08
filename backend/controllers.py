@@ -21,19 +21,22 @@ def get_report(report_id: int) -> Report:
     report = Report.get(report_id) # May raise ReportNotFound
     return report
 
-def get_reports(limit: int = 100) -> list:
+def get_reports(filters: dict = {}, limit: int = 100) -> list:
     """
     Get limit reports from the database.
     Args:
+        filters: dict, filters to apply to the reports.
+            Available fields: report_id, dupe_of, status, component, creation_time
+            Must be strings
         limit: limit of the number of reports to get.
     Returns:
         reports: list of reports (Report)
     Exceptions:
         NoReportsFound. If there are no reports in the database.
     Example:
-        >>> reports = get_reports(limit=10)
+        >>> reports = get_reports(filters={"dupe_of": "None"}, limit=10)
     """
-    reports = Report.get_reports(limit=limit) # May raise NoReportsFound
+    reports = Report.get_reports(filters, limit) # May raise NoReportsFound
     return reports
 
 def create_report(report_id: int, creation_time: datetime,

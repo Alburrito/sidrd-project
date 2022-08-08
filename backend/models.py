@@ -38,6 +38,10 @@ class Report():
         comments: list, list of comments on the report.
     """
 
+    INTEGER_FIELDS = ["report_id", "dupe_of"]
+    DATETIME_FIELDS = ["creation_time"]
+    STRING_FIELDS = ["status", "component", "summary"]
+
     def __init__(self, 
                 report_id: int, creation_time: datetime,
                 status: str, component: str, dupe_of: int,
@@ -75,21 +79,37 @@ class Report():
         return cls(**report)
 
     @classmethod
-    def get_reports(cls, limit: int = 100) -> list:
+    def get_reports(cls, filters: dict = {}, limit: int = 100) -> list:
         """
-        Get limit reports from the database.
+        Get reports from the database filtered by the filters.
         Args:
-            limit: limit of the number of reports to get.
+            filters: dict, filters to apply to the reports.
+                Available fields: report_id, dupe_of, status, component, creation_time
+                Must be strings
+            limit: number of reports to get.
         Returns:
             reports: list of reports (Report)
         Exceptions:
             NoReportsFound. If there are no reports in the database.
         Example:
-            >>> reports = Report.get_reports(limit=10)
+            >>> reports = Report.get_reports(filters={"dupe_of": "None"}, limit=10)
         """
-        # TODO: incorporate filters (only master?)
+        q_filters = {}
 
-        reports = reports_collection.find({}).sort(
+        for key, value in filters.items():
+            try:
+                if key in cls.INTEGER_FIELDS:
+                    q_filters[key] = int(value)
+                elif key in cls.DATETIME_FIELDS:
+                    q_filters[key] = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                elif key in cls.STRING_FIELDS:
+                    q_filters[key] = str(value)
+                else:
+                    q_filters[key] = value
+            except ValueError:
+                q_filters[key] = value
+        
+        reports = reports_collection.find(q_filters).sort(
             "creation_time", -1
         ).limit(limit)
 
