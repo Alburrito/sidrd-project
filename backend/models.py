@@ -6,12 +6,12 @@ from pymongo import MongoClient
 from exceptions import NoReportsFound, ReportAlreadyExists, ReportNotFound
 
 # CONSTANTS
-BUG_REPORTS_COLLECTION = "bug_reports"
 
 # ENV VARIABLES
 HOST = environ.get("DB_HOST", 'localhost')
 PORT = int(environ.get("DB_PORT", '27017'))
 DB_NAME = environ.get("DB_NAME", "bug_reports_db")
+BUG_REPORTS_COLLECTION = environ.get("DB_REPORT_COLLECTION", "bug_reports")
 
 # CLIENT AND DATABASE CONNECTION
 client = MongoClient(HOST, PORT)
@@ -106,14 +106,14 @@ class Report():
                     q_filters[key] = str(value)
                 else:
                     q_filters[key] = value
-            except ValueError:
+            except Exception:
                 q_filters[key] = value
         
-        reports = reports_collection.find(q_filters).sort(
+        reports = list(reports_collection.find(q_filters).sort(
             "creation_time", -1
-        ).limit(limit)
+        ).limit(limit))
 
-        if reports is None:
+        if reports == []:
             raise NoReportsFound()
 
         return [cls(**report) for report in reports]
