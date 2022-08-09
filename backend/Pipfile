@@ -6,9 +6,12 @@ name = "pypi"
 [packages]
 pymongo = "*"
 requests = "*"
+spacy = "*"
 
 [dev-packages]
 ipdb = "*"
+pandas = "*"
+pytest = "*"
 
 [requires]
 python_version = "3.8"

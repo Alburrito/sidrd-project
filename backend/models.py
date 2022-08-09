@@ -6,12 +6,12 @@ from pymongo import MongoClient
 from exceptions import NoReportsFound, ReportAlreadyExists, ReportNotFound
 
 # CONSTANTS
-BUG_REPORTS_COLLECTION = "bug_reports"
 
 # ENV VARIABLES
 HOST = environ.get("DB_HOST", 'localhost')
 PORT = int(environ.get("DB_PORT", '27017'))
 DB_NAME = environ.get("DB_NAME", "bug_reports_db")
+BUG_REPORTS_COLLECTION = environ.get("DB_REPORT_COLLECTION", "bug_reports")
 
 # CLIENT AND DATABASE CONNECTION
 client = MongoClient(HOST, PORT)
@@ -37,6 +37,10 @@ class Report():
         summary: str, summary of the report.
         comments: list, list of comments on the report.
     """
+
+    INTEGER_FIELDS = ["report_id", "dupe_of"]
+    DATETIME_FIELDS = ["creation_time"]
+    STRING_FIELDS = ["status", "component", "summary"]
 
     def __init__(self, 
                 report_id: int, creation_time: datetime,
@@ -75,25 +79,41 @@ class Report():
         return cls(**report)
 
     @classmethod
-    def get_reports(cls, limit: int = 100) -> list:
+    def get_reports(cls, filters: dict = {}, limit: int = 100) -> list:
         """
-        Get limit reports from the database.
+        Get reports from the database filtered by the filters.
         Args:
-            limit: limit of the number of reports to get.
+            filters: dict, filters to apply to the reports.
+                Available fields: report_id, dupe_of, status, component, creation_time
+                Must be strings
+            limit: number of reports to get.
         Returns:
             reports: list of reports (Report)
         Exceptions:
             NoReportsFound. If there are no reports in the database.
         Example:
-            >>> reports = Report.get_reports(limit=10)
+            >>> reports = Report.get_reports(filters={"dupe_of": "None"}, limit=10)
         """
-        # TODO: incorporate filters (only master?)
+        q_filters = {}
 
-        reports = reports_collection.find({}).sort(
+        for key, value in filters.items():
+            try:
+                if key in cls.INTEGER_FIELDS:
+                    q_filters[key] = int(value)
+                elif key in cls.DATETIME_FIELDS:
+                    q_filters[key] = datetime.strptime(value, "%Y-%m-%d %H:%M:%S")
+                elif key in cls.STRING_FIELDS:
+                    q_filters[key] = str(value)
+                else:
+                    q_filters[key] = value
+            except Exception:
+                q_filters[key] = value
+        
+        reports = list(reports_collection.find(q_filters).sort(
             "creation_time", -1
-        ).limit(limit)
+        ).limit(limit))
 
-        if reports is None:
+        if reports == []:
             raise NoReportsFound()
 
         return [cls(**report) for report in reports]
