@@ -76,7 +76,7 @@ def create_many_reports(reports: list) -> int:
     """
     inserted_reports = 0
 
-    if len(reports) > 0:
+    if reports:
         for rp in reports:
             report = Report(**rp) if type(rp) == dict else rp
             try:

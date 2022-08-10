@@ -35,7 +35,10 @@ class Scraper():
         component = scraped_report['component']
         dupe_of = int(scraped_report['dupe_of']) if scraped_report['dupe_of'] else None
         summary = scraped_report['summary']
-        comments = scraped_report['comments']
+        try:
+            comments = scraped_report['comments'][f'{report_id}']['comments'][0]['raw_text']
+        except Exception as e:
+            comments = ""
 
         return Report(report_id, creation_time, status, 
                     component, dupe_of, summary, comments)
