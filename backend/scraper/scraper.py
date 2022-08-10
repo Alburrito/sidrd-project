@@ -2,7 +2,7 @@
 import os
 import sys
 import csv
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from controllers import create_many_reports, delete_report
 from models import Report
@@ -168,6 +168,8 @@ class Scraper():
             >>> results = scraper.scrape('scraper_config.csv.example')
         """
         time_start = datetime.now()
+        config_times = []
+
         # Check if the scraper config file exists in scraper/config folder
         print("[*] Checking scraper config file...")
         try:
@@ -210,6 +212,7 @@ class Scraper():
             # Initialize config results
             config_master_created = 0
             config_duplicate_created = 0
+            config_init_time = datetime.now()
             print("[+]" + "-"*20 + f" Config ({configs.index(terms)+1}/{num_configs}) " + "-"*20)
             print(f"[*] Scraping config: {terms}\n[+] ...", end="")
 
@@ -254,8 +257,13 @@ class Scraper():
 
                 # After finding masters, save in BD and update results
                 config_master_created = create_many_reports(master_reports)
+                config_time = (datetime.now() - config_init_time)
+                config_times.append(config_time)
+                config_time_avg = sum(config_times, timedelta(0)) / len(config_times)
+                remaining_time = (config_time_avg * (num_configs - configs.index(terms) - 1))
                 print(f"[+] Found {len(reports)} duplicate reports. Created {config_duplicate_created} duplicate reports")
                 print(f"[+] Found {len(master_reports)} master reports. Created {config_master_created} master reports")
+                print(f"[+] Config took {config_time}. Average time: {config_time_avg}. Remaining time: ~{remaining_time}")
                 result['master'] += config_master_created
 
             # Write config results to file
