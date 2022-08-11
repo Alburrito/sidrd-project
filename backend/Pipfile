@@ -6,12 +6,14 @@ name = "pypi"
 [packages]
 pymongo = "*"
 requests = "*"
-spacy = "*"
+nltk = "*"
 
 [dev-packages]
 ipdb = "*"
 pandas = "*"
 pytest = "*"
+matplotlib = "*"
+wordcloud = "*"
 
 [requires]
 python_version = "3.8"
