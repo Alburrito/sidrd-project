@@ -192,7 +192,8 @@ class Scraper():
             writer = csv.writer(results_file)
             writer.writerow([
                 'num_reports', 'product', 'mode', 
-                'creation_time', 'master_inserted', 'duplicate_inserted'
+                'creation_time', 'master_inserted', 'duplicate_inserted',
+                'config_time', 'current_time', 'remaining_time'
             ])
 
         # Read config file
@@ -256,22 +257,24 @@ class Scraper():
                         print(f"[*] {report_idx}/{len(reports)} duplicates processed")
 
                 # After finding masters, save in BD and update results
-                config_master_created = create_many_reports(master_reports)
-                config_time = (datetime.now() - config_init_time)
-                config_times.append(config_time)
-                config_time_avg = sum(config_times, timedelta(0)) / len(config_times)
-                remaining_time = (config_time_avg * (num_configs - configs.index(terms) - 1))
                 print(f"[+] Found {len(reports)} duplicate reports. Created {config_duplicate_created} duplicate reports")
                 print(f"[+] Found {len(master_reports)} master reports. Created {config_master_created} master reports")
-                print(f"[+] Config took {config_time}. Average time: {config_time_avg}. Remaining time: ~{remaining_time}")
                 result['master'] += config_master_created
 
+            config_master_created = create_many_reports(master_reports)
+            config_time = (datetime.now() - config_init_time)
+            config_times.append(config_time)
+            current_time = sum(config_times, timedelta(0))
+            config_time_avg = current_time / len(config_times)
+            remaining_time = (config_time_avg * (num_configs - configs.index(terms) - 1))
+            print(f"[+] Config time {config_time}. Average time: {config_time_avg}. | Current time: {current_time}. Remaining time: ~{remaining_time}")
             # Write config results to file
             with open(results_path, 'a') as resultscsvfile:
                 writer = csv.writer(resultscsvfile)
                 writer.writerow([
                     terms['limit'], terms['product'], 'duplicate' if terms['resolution'] == 'DUPLICATE' else 'master',
-                    terms['creation_time'], max(0, config_master_created), max(0, config_duplicate_created)
+                    terms['creation_time'], max(0, config_master_created), max(0, config_duplicate_created),
+                    config_time, current_time, remaining_time
                 ])
 
         result['master'] = max(0, result['master'])
