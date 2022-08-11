@@ -1,5 +1,5 @@
 """Main module while no api routes"""
-
+import os
 import sys
 import getopt
 
@@ -31,6 +31,9 @@ if __name__ == "__main__":
             sys.exit(0)
         elif o == "-s":
             print("[+]" + "-"*25 + " SCRAPING MODE SELECTED " + "-"*25)
+            database = os.environ.get('DB_NAME')
+            collection = os.environ.get('DB_REPORT_COLLECTION')
+            print(f"[+] Database: {database}. Collection: {collection}")
             result = Scraper().scrape(a)
             print("[+]" + "-"*25 + "    SCRAPING FINISHED   " + "-"*25)
             sys.exit(0)
