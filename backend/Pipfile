@@ -7,6 +7,8 @@ name = "pypi"
 pymongo = "*"
 requests = "*"
 nltk = "*"
+sklearn = "*"
+kneed = "*"
 
 [dev-packages]
 ipdb = "*"
@@ -14,6 +16,7 @@ pandas = "*"
 pytest = "*"
 matplotlib = "*"
 wordcloud = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.8"
