@@ -1,7 +1,13 @@
 """Module for SIDRD funcionality."""
+from curses.ascii import isdigit
+from typing import Optional
+from controllers import (
+    get_tokenized_reports as get_tokenized_reports_controller
+)
 from string import punctuation
 
 import pickle
+import pandas as pd
 
 import nltk
 nltk.download('omw-1.4')
@@ -56,7 +62,7 @@ class Tokenizer():
 
     def __init__(self) -> None:
         self.__EXTRA_CHARACTERS = [p for p in punctuation if p not in list('_')]
-        self.__URL_FORBIDDEN_CHARS = [c for c in self.__EXTRA_CHARACTERS if c not in [':', '/', '?', '=', '&', '#']]
+        self.__URL_FORBIDDEN_CHARS = [c for c in self.__EXTRA_CHARACTERS if c in [':', '/', '?', '=', '&', '#', '.']]
         self.__CUSTOM_WORDS = ['info', 'https', 'http', 'org', 'com', 'net', 'edu']
 
         self.__LEMMATIZER = WordNetLemmatizer()
@@ -72,22 +78,22 @@ class Tokenizer():
         Returns:
             List of processed tokens. (str)
         """
-        if token.isdigit():
-            return []
-
         token = token.lower()
 
         if token.startswith('http'):
+
             token = ''.join(
-                [w if w not in self._URL_FORBIDDEN_CHARS else '' for w in token]
+                [w if w not in self.__URL_FORBIDDEN_CHARS else ' ' for w in token]
             )
         else:
             token = ''.join(
-                [w if w not in self._EXTRA_CHARACTERS else ' ' for w in token]
+                [w if w not in self.__EXTRA_CHARACTERS else ' ' for w in token]
             )
 
         token = token.strip()
-        return token.split() if len(token.split()) > 1 else [token]
+        tokens = token.split() if len(token.split()) > 1 else [token]
+        tokens = [t for t in tokens if not t.isdigit()]
+        return tokens
 
     def __remove_extra_characters(self, text: str) -> list:
         """Remove extra characters from a sentence.
@@ -165,9 +171,9 @@ class Tokenizer():
 
 class Vectorizer():
 
-    def __init__(self) -> None:
+    def __init__(self, vectorizer=None) -> None:
         self.__vectorizer_path = f'{RESOURCES_PATH}/vectorizer.pkl'
-        self.__VECTORIZER = load_obj(self.__vectorizer_path)
+        self.__VECTORIZER = vectorizer if vectorizer else load_obj(self.__vectorizer_path)
     
     def vectorize(self, tokens: list) -> list:
         """
@@ -178,7 +184,10 @@ class Vectorizer():
         Returns:
             list: list of Tf-idf-weighted document-term matrix.
         """
-        return self.__VECTORIZER.transform(tokens).toarray()
+        x = []
+        for t in tokens:
+            x.append(' '.join(t))
+        return self.__VECTORIZER.transform(x).toarray()
 
     def retrain(self, tokens_lists: list) -> list:
         """
@@ -194,14 +203,43 @@ class Vectorizer():
         dump_obj(self.__VECTORIZER, self.__vectorizer_path)
         return features
 
-
 class Clusterizer():
 
-    def __init__(self) -> None:
-        pass
+    def __init__(self, vectorizer: Vectorizer) -> None:
+        self.__N_CLUSTERS = 3
+        self.__LIMIT = 100 # Can be iteration limit or number of reports in final cluster
+        self.__VECTORIZER = vectorizer
+    
+    def __build_reports_dataframe(reports: list) -> pd.DataFrame:
+        """
+        Builds a dataframe with the reports data.
+        Args:
+            reports (list): List of reports.
+        Returns:
+            pd.DataFrame: Dataframe with the reports data.
+        """
+        columns = ['report_id', 'creation_time', 'status', 'component', 'summary', 'comments', 'text', 'tokens']
+        df = pd.DataFrame(columns=columns)
+        # Add report (TokenizedReport) in reports to df
+        for report in reports:
+            pass
 
-    def clusterize(self, text: str) -> list:
-        pass
+    def clusterize(self, features: str, test_reports: Optional[list]=None) -> pd.DataFrame:
+        """
+        Receives a list of features representing a new report.
+        Obtains the tokens of the reports in BD, transforms them into features.
+        Clusters the features iteratively.
+        Args:
+            features (list): list of features to clusterize. The new report
+            test_reports (list): list of reports to clusterize. Simulates DB reports (TokenizedReport) elemnets
+        Returns:
+            pd.DataFrame: list of reports in the same cluster as the new report
+        """
+        # Obtain tokens of the reports in DB
+        reports_db = test_reports if test_reports else get_tokenized_reports_controller()
+        # Build dataframe
+        df = self.__build_reports_dataframe(reports_db)
+        
 
     def retrain(self) -> None:
         pass

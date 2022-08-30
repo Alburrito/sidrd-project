@@ -84,3 +84,84 @@ class TestReports(BaseTest):
         c.delete_all_reports()
         self.assertRaises(NoReportsFound, c.get_reports)
         self.assertRaises(NoReportsFound, c.delete_all_reports)
+
+
+class TestTokenizedReports(BaseTest):
+    """TestCase class to test the report related functionalities"""
+
+    def test_get_tokenized_report(self):
+        """Test test_get_tokenized_report function"""
+        report_id = 1606814
+        report = c.get_tokenized_report(report_id)
+        self.assertEqual(report.report_id, report_id)
+        self.assertRaises(ReportNotFound, c.get_tokenized_report, -1)
+
+
+    def test_get_tokenized_reports(self):
+        """Test get_tokenized_reports function"""
+        reports = c.get_tokenized_reports()
+        self.assertGreater(len(reports), 0)
+
+        reports = c.get_tokenized_reports(
+            filters={"dupe_of": None},
+            limit=2
+        )
+        self.assertEqual(len(reports), 2)
+        self.assertEqual(reports[0].dupe_of, None)
+        self.assertEqual(reports[1].dupe_of, None)
+        self.assertRaises(NoReportsFound, c.get_tokenized_reports, filters={"dupe_of": -1})
+
+
+    def test_create_tokenized_report(self):
+        """Test test_create_tokenized_report function"""
+        report = c.create_tokenized_report(1, datetime.now(), "DUPLICATE",
+                    "component", 23, "summary", 
+                    {'1': {"comments": [
+                        {"text": "comment1"}, {"text": "comment2"}
+                    ]}}, "text", ["token1", "token2"]
+                )
+        self.assertEqual(report.report_id, 1)
+
+        report = c.create_tokenized_report(23, datetime.now(), "RESOLVED",
+            "component", None, "summary", 
+            {'23': {"comments": [
+                {"text": "comment1"}, {"text": "comment2"}
+            ]}}, "text", ["token1", "token2"]
+        )
+        self.assertEqual(report.dupe_of, None)
+        self.assertRaises(ReportAlreadyExists, c.create_tokenized_report, 23, datetime.now(), "DUPLICATE", "component", None, "summary", {'1': {} }, "text", ["token1", "token2"])
+
+
+    def test_create_many_tokenized_reports(self):
+        """Test create_many_tokenized_reports function"""
+        reports = [
+            {"report_id": 1, "creation_time": datetime.now(), "status": "DUPLICATE", "component": "component", "dupe_of": 23, "summary": "summary", "comments": [{"text": "comment1"}, {"text": "comment2"}], "text": "text", "tokens": ["token1", "token2"]},
+            {"report_id": 23, "creation_time": datetime.now(), "status": "RESOLVED", "component": "component", "dupe_of": None, "summary": "summary", "comments": [{"text": "comment1"}, {"text": "comment2"}], "text": "text", "tokens": ["token1", "token2"]}
+        ]
+        inserted_reports = c.create_many_tokenized_reports(reports)
+        self.assertEqual(inserted_reports, 2)
+        self.assertEqual(c.get_tokenized_report(1).dupe_of, 23)
+        self.assertEqual(c.get_tokenized_report(23).dupe_of, None)
+
+
+    def test_delete_tokenized_report(self):
+        """Test delete_tokenized_report function"""
+        reports_number = len(c.get_tokenized_reports())
+        report = c.create_tokenized_report(160, datetime.now(), "DUPLICATE",
+                    "component", 23, "summary", 
+                    {'160': {"comments": [
+                        {"text": "comment1"}, {"text": "comment2"}
+                    ]}}, "text", ["token1", "token2"]
+                )
+        self.assertEqual(len(c.get_tokenized_reports()), reports_number + 1)
+        c.delete_tokenized_report(report.report_id)
+        self.assertEqual(len(c.get_tokenized_reports()), reports_number)
+        self.assertRaises(ReportNotFound, c.get_tokenized_report, report.report_id)
+    
+
+    def test_delete_all_tokenized_reports(self):
+        """Test delete_all_tokenized_reports function"""
+        self.assertGreater(len(c.get_tokenized_reports()), 0)
+        c.delete_all_tokenized_reports()
+        self.assertRaises(NoReportsFound, c.get_tokenized_reports)
+        self.assertRaises(NoReportsFound, c.delete_all_tokenized_reports)
