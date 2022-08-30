@@ -1,13 +1,27 @@
 """Module for SIDRD funcionality."""
 from string import punctuation
 
+import pickle
+
 import nltk
 nltk.download('omw-1.4')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
 
+from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 RESOURCES_PATH = 'resources'
+
+def dump_obj(obj, filename):
+    """Persist an object to a file."""
+    with open(filename, 'wb') as f:
+        pickle.dump(obj, f)
+
+def load_obj(filename):
+    """Load an object from a file."""
+    with open(filename, 'rb') as f:
+        return pickle.load(f)
 
 
 class SIDRD():
@@ -152,13 +166,33 @@ class Tokenizer():
 class Vectorizer():
 
     def __init__(self) -> None:
-        pass
+        self.__vectorizer_path = f'{RESOURCES_PATH}/vectorizer.pkl'
+        self.__VECTORIZER = load_obj(self.__vectorizer_path)
+    
+    def vectorize(self, tokens: list) -> list:
+        """
+        Vectorizes a sentence or a list of sentences
+        Args:
+            tokens (list): tokens to process. 
+                If single report, it is a list with one element.
+        Returns:
+            list: list of Tf-idf-weighted document-term matrix.
+        """
+        return self.__VECTORIZER.transform(tokens).toarray()
 
-    def vectorize(self, text: str) -> list:
-        pass
-
-    def retrain(self) -> None:
-        pass
+    def retrain(self, tokens_lists: list) -> list:
+        """
+        Fits a vectorizer with tokens_lists. Persists the vectorizer in a pickle file.
+        Args:
+            tokens_lists (list): List of lists of tokens. (each token list is a report)
+        Returns:
+            list: list of Tf-idf-weighted document-term matrix.
+        """
+        x = [' '.join(tokens) for tokens in tokens_lists]
+        self.__VECTORIZER = TfidfVectorizer()
+        features = self.__VECTORIZER.fit_transform(x)
+        dump_obj(self.__VECTORIZER, self.__vectorizer_path)
+        return features
 
 
 class Clusterizer():
