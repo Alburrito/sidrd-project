@@ -6,12 +6,17 @@ name = "pypi"
 [packages]
 pymongo = "*"
 requests = "*"
-spacy = "*"
+nltk = "*"
+sklearn = "*"
+kneed = "*"
 
 [dev-packages]
 ipdb = "*"
 pandas = "*"
 pytest = "*"
+matplotlib = "*"
+wordcloud = "*"
+seaborn = "*"
 
 [requires]
 python_version = "3.8"
