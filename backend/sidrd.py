@@ -1,9 +1,10 @@
 """Module for SIDRD funcionality."""
-from curses.ascii import isdigit
+from datetime import datetime
 from typing import Optional
 from controllers import (
     get_tokenized_reports as get_tokenized_reports_controller
 )
+from models import TokenizedReport
 from string import punctuation
 
 import pickle
@@ -15,9 +16,13 @@ from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
 
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.cluster import KMeans
 
 
 RESOURCES_PATH = 'resources'
+VECTORIZER_PATH = 'resources/vectorizer'
+CLUSTERIZER_PATH = 'resources/clusterizer'
+CLASSIFIER_PATH = 'resources/classifier'
 
 def dump_obj(obj, filename):
     """Persist an object to a file."""
@@ -148,6 +153,37 @@ class Tokenizer():
         return [
             self.__STEMMER.stem(w) if w not in self.__STEMMER_PASS_TOKENS else w for w in tokens
         ]
+    
+    def generate_text(self, report: TokenizedReport, mode: str) -> str:
+        """
+        Generates text using the information from the report
+        Args:
+            report (TokenizedReport): Report to use.
+            mode (str): Mode to use:
+                S - summary
+                SC - summary and component
+                SCH - summary, component and bodies with High number of characters
+                SCL - summary, component and bodies with Low number of characters
+        Exceptions:
+            ValueError: If mode is not valid or no information is available.
+        Returns:
+            str: Text generated from the report.
+        """
+        information = []
+        if 'S' in mode:
+            information.append(report.summary)
+        if 'C' in mode:
+            information.append(report.component)
+        if 'H' in mode:
+            information.append(report.comments) if len(report.comments) <= 1000 else None
+        elif 'L' in mode:
+            information.append(report.comments) if len(report.comments) <= 250 else None
+ 
+        if len(information) == 0:
+            raise ValueError('Invalid mode')
+        
+        # Double join with split to remove possible multiple spaces
+        return ' '.join(' '.join(information).split())
 
 
     def tokenize(self, text: str, mode: str) -> list:
@@ -173,15 +209,19 @@ class Tokenizer():
 class Vectorizer():
 
     def __init__(self, vectorizer=None) -> None:
-        self.__vectorizer_path = f'{RESOURCES_PATH}/vectorizer.pkl'
+        """
+        If a vectorizer is not provided, the default one is used
+        """
+        self.__vectorizer_path = f'{VECTORIZER_PATH}/tfidf-default.pkl'
         self.__VECTORIZER = vectorizer if vectorizer else load_obj(self.__vectorizer_path)
-    
+
     def vectorize(self, tokens: list) -> list:
         """
         Vectorizes a sentence or a list of sentences
         Args:
-            tokens (list): tokens to process. 
+            tokens (list): list of lists of tokens to process.
                 If single report, it is a list with one element.
+                So, each element of the list is a list of tokens.
         Returns:
             list: list of Tf-idf-weighted document-term matrix.
         """
@@ -201,46 +241,90 @@ class Vectorizer():
         x = [' '.join(tokens) for tokens in tokens_lists]
         self.__VECTORIZER = TfidfVectorizer()
         features = self.__VECTORIZER.fit_transform(x)
-        dump_obj(self.__VECTORIZER, self.__vectorizer_path)
+        dump_obj(self.__VECTORIZER, f'{VECTORIZER_PATH}/retrain_{datetime.now()}.pkl')
         return features
 
 class Clusterizer():
 
-    def __init__(self, vectorizer: Vectorizer) -> None:
-        self.__N_CLUSTERS = 3
-        self.__LIMIT = 100 # Can be iteration limit or number of reports in final cluster
+    __REP_CLU = 'REPORTS_PER_CLUSTER'
+    __REC_LVL = 'RECURSIVITY_LEVEL'
+
+    def __init__(self, vectorizer: Vectorizer, n_clusters: int = 3, 
+            limit: int = 4, mode: str = __REC_LVL, min_reports_per_cluster = 3
+        ):
         self.__VECTORIZER = vectorizer
+        self.__N_CLUSTERS = n_clusters
+        # limit can be iteration limit or number of reports in final cluster
+        self.__LIMIT = limit 
+        self.__MODE = mode
+        self.__MIN_REPORTS = min_reports_per_cluster
     
-    def __build_reports_dataframe(reports: list) -> pd.DataFrame:
+    def __build_reports_dataframe(self, reports: list, report: TokenizedReport) -> pd.DataFrame:
         """
         Builds a dataframe with the reports data.
+        Adds in the end the new report
         Args:
-            reports (list): List of reports.
+            reports (list of TokenizedReport): List of reports.
+            report (TokenizedReport): New report to add.
         Returns:
             pd.DataFrame: Dataframe with the reports data.
         """
+        # Create base dataframe
         columns = ['report_id', 'creation_time', 'status', 'component', 'summary', 'comments', 'text', 'tokens']
         df = pd.DataFrame(columns=columns)
-        # Add report (TokenizedReport) in reports to df
-        for report in reports:
-            pass
+        # Add DB reports
+        for rep in reports:
+            rep_df = pd.DataFrame([[
+                rep.report_id, rep.creation_time, rep.status, rep.component,
+                rep.summary, rep.comments, rep.text, rep.tokens
+            ]], columns=columns)
+            df = pd.concat([df, rep_df])
+        # Add analyzed report
+        rep_df = pd.DataFrame([[
+            report.report_id, report.creation_time, report.status,
+            report.component, report.summary, report.comments,
+            report.text, report.tokens
+        ]], columns=columns)
+        df = pd.concat([df, rep_df])
+        return df
 
-    def clusterize(self, features: str, test_reports: Optional[list]=None) -> pd.DataFrame:
+    def clusterize(self, report: TokenizedReport, test_reports: Optional[list]=None) -> pd.DataFrame:
         """
         Receives a list of features representing a new report.
-        Obtains the tokens of the reports in BD, transforms them into features.
+        Obtains the tokens of the reports in DB, transforms them into features.
         Clusters the features iteratively.
         Args:
-            features (list): list of features to clusterize. The new report
-            test_reports (list): list of reports to clusterize. Simulates DB reports (TokenizedReport) elemnets
+            report (TokenizedReport): The new report to clusterize. Must have 'tokens' and 'report_id'
+            test_reports (list): list of reports to clusterize. Simulates DB reports (TokenizedReport) elements.
+                If test_reports is not provided, the reports in the DB are used.
         Returns:
             pd.DataFrame: list of reports in the same cluster as the new report
         """
         # Obtain tokens of the reports in DB
-        reports_db = test_reports if test_reports else get_tokenized_reports_controller()
+        reports_db = test_reports if test_reports else get_tokenized_reports_controller(limit=5000)
         # Build dataframe
-        df = self.__build_reports_dataframe(reports_db)
-        
+        df = self.__build_reports_dataframe(reports_db, report)
+
+        limit = 0 if self.__MODE == self.__REC_LVL else self.__LIMIT
+        current = self.__LIMIT if self.__MODE == self.__REC_LVL else len(df)
+
+        while all([current > limit, len(df) >= self.__N_CLUSTERS]):
+            # Transform tokens into features:
+            features = self.__VECTORIZER.vectorize(df['tokens'])
+            # Fit cluster model with features
+            kmeans = KMeans(n_clusters=self.__N_CLUSTERS, random_state=0).fit(features)
+            # Keep last cluster in case new one is not big enough
+            old_df = df.copy()
+            # Assign the labels to the dataframe
+            df['cluster'] = kmeans.labels_
+            # Get the cluster of the new report
+            new_report_cluster = df[df['report_id'] == report.report_id]['cluster'].values[0]
+            # Filter the dataframe to get the reports in the same cluster as the new report
+            df = df[df['cluster'] == new_report_cluster]
+            # Update current
+            current = current-1 if self.__MODE == self.__REC_LVL else len(df)
+
+        return df if len(df) >= self.__MIN_REPORTS else old_df
 
     def retrain(self) -> None:
         pass
