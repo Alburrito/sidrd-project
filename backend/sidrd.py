@@ -2,6 +2,7 @@
 from datetime import datetime
 from typing import Optional
 from controllers import (
+    get_tokenized_report as get_tokenized_report_controller,
     get_tokenized_reports as get_tokenized_reports_controller
 )
 from models import TokenizedReport
@@ -35,37 +36,11 @@ def load_obj(filename):
         return pickle.load(f)
 
 
-class SIDRD():
-
-    def __init__(self) -> None:
-
-        self.tokenizer = Tokenizer()
-        self.vectorizer = Vectorizer()
-        self.clusterizer = Clusterizer()
-        self.classifier = Classifier()
-
-    
-    def get_duplicates(self, report) -> None:
-        # TODO: Cambiar en funcion de resultados
-        text = report.summary + ' ' + report.component
-        
-        tokens = self.tokenizer.tokenize(text)
-        
-        features = self.vectorizer.vectorize(tokens)
-        
-        cluster_reports = self.clusterizer.clusterize(features)
-        
-        duplicates = self.classifier.classify(cluster_reports)
-        
-        return duplicates
-    
-    def retrain(self) -> None:
-        pass
-
 
 class Tokenizer():
 
-    def __init__(self) -> None:
+    def __init__(self, default_mode: str=None) -> None:
+        self.__DEFAULT_MODE = default_mode if default_mode else 'stem'
         self.__EXTRA_CHARACTERS = [p for p in punctuation if p not in list('_')]
         self.__URL_FORBIDDEN_CHARS = [c for c in self.__EXTRA_CHARACTERS if c in [':', '/', '?', '=', '&', '#', '.']]
         self.__CUSTOM_WORDS = ['info', 'https', 'http', 'org', 'com', 'net', 'edu']
@@ -186,22 +161,23 @@ class Tokenizer():
         return ' '.join(' '.join(information).split())
 
 
-    def tokenize(self, text: str, mode: str) -> list:
+    def tokenize(self, text: str, mode: str = None) -> list:
         """
         Processes a sentence. 
         Lowercases, removes digits and punctuation, stopwords and gets the root token.
         Args:
             text (str): Text to process.
-            mode (str): Mode to process the text. Can be 'stem' or 'lemmatize'.
+            mode (str): Mode to process the text. Can be 'stem' or 'lemmatize'. Defaults to 'stem'.
         Returns:
             list: list of processed tokens. (str)
         """
         p_text = text.lower()
         p_text = self.__remove_extra_characters(p_text)
         p_text = self.__remove_stopwords(p_text)
-        if mode == 'stem':
+        p_mode = mode if mode else self.__DEFAULT_MODE
+        if p_mode == 'stem':
             p_text = self.__stem(p_text)
-        elif mode == 'lemmatize':
+        elif p_mode == 'lemmatize':
             p_text = self.__lemmatize(p_text)
         return [t for t in p_text if t not in ['', ' ']]
 
@@ -397,5 +373,40 @@ class Classifier():
         # Return reports
         return similar_reports[similar_reports['report_id'].isin(df['similar_report_id'])]
 
+    def retrain(self) -> None:
+        pass
+
+
+class SIDRD():
+
+    def __init__(self, tokenizer: Tokenizer = None, vectorizer: Vectorizer = None,
+                    clusterizer: Clusterizer = None, classifier: Classifier = None):
+        self.tokenizer = tokenizer if tokenizer else Tokenizer(default_mode = 'stem')
+        self.vectorizer = vectorizer if vectorizer else load_obj(f'{RESOURCES_PATH}/vectorizer-default.pkl')
+        self.clusterizer = clusterizer if clusterizer else load_obj(f'{RESOURCES_PATH}/clusterizer-default.pkl')
+        self.classifier = classifier if classifier else load_obj(f'{RESOURCES_PATH}/classifier-default.pkl')
+
+    
+    def __dataframe_to_tokenized_reports(self, df: pd.DataFrame) -> list:
+        """
+        Searches in BD for the reports and returns the list of TokenizedReport objects
+        Args:
+            df (pd.DataFrame): dataframe to convert
+        Returns:
+            list: list of TokenizedReport
+        """
+        return [get_tokenized_report_controller(row['report_id']) for i, row in df.iterrows()]
+
+    def get_duplicates(self, report: TokenizedReport, test_reports: Optional[list]=None) -> None:
+        """
+        Takes a tokenized report and returns the possible duplicates.
+        """
+        text = report.summary + ' ' + report.component
+        report.text = text
+        report.tokens = self.tokenizer.tokenize(text)
+        similar_reports = self.clusterizer.clusterize(report, test_reports)
+        duplicates = self.classifier.get_possible_duplicates(report, similar_reports)
+        return report, self.__dataframe_to_tokenized_reports(duplicates)
+    
     def retrain(self) -> None:
         pass
