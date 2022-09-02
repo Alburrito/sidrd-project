@@ -64,6 +64,7 @@ class Tokenizer():
         self.__EXTRA_CHARACTERS = [p for p in punctuation if p not in list('_')]
         self.__URL_FORBIDDEN_CHARS = [c for c in self.__EXTRA_CHARACTERS if c in [':', '/', '?', '=', '&', '#', '.']]
         self.__CUSTOM_WORDS = ['info', 'https', 'http', 'org', 'com', 'net', 'edu']
+        self.__CUSTOM_WORDS.extend([chr(i) for i in range(ord('a'), ord('z') + 1)])
 
         self.__LEMMATIZER = WordNetLemmatizer()
         self.__LEMMATIZER_PASS_TOKENS = ['js']
