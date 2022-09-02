@@ -212,8 +212,8 @@ class Vectorizer():
         """
         If a vectorizer is not provided, the default one is used
         """
-        self.__vectorizer_path = f'{VECTORIZER_PATH}/tfidf-default.pkl'
-        self.__VECTORIZER = vectorizer if vectorizer else load_obj(self.__vectorizer_path)
+        self.__VECTORIZER = vectorizer if vectorizer else load_obj(
+            f"{VECTORIZER_PATH}/tfidf-default.pkl")
 
     def vectorize(self, tokens: list) -> list:
         """
@@ -249,10 +249,11 @@ class Clusterizer():
     __REP_CLU = 'REPORTS_PER_CLUSTER'
     __REC_LVL = 'RECURSIVITY_LEVEL'
 
-    def __init__(self, vectorizer: Vectorizer, n_clusters: int = 3, 
+    def __init__(self, vectorizer: Vectorizer = None, n_clusters: int = 3, 
             limit: int = 4, mode: str = __REC_LVL, min_reports_per_cluster = 3
         ):
-        self.__VECTORIZER = vectorizer
+        self.__VECTORIZER = vectorizer if vectorizer else load_obj(
+            f'{RESOURCES_PATH}/vectorizer-default.pkl')
         self.__N_CLUSTERS = n_clusters
         # limit can be iteration limit or number of reports in final cluster
         self.__LIMIT = limit 
@@ -314,7 +315,7 @@ class Clusterizer():
             # Fit cluster model with features
             kmeans = KMeans(n_clusters=self.__N_CLUSTERS, random_state=0).fit(features)
             # Keep last cluster in case new one is not big enough
-            old_df = df.copy()
+            last_df = df.copy()
             # Assign the labels to the dataframe
             df['cluster'] = kmeans.labels_
             # Get the cluster of the new report
@@ -324,7 +325,12 @@ class Clusterizer():
             # Update current
             current = current-1 if self.__MODE == self.__REC_LVL else len(df)
 
-        return df if len(df) >= self.__MIN_REPORTS else old_df
+        # If the cluster is too small, return the last cluster
+        df = df if len(df) >= self.__MIN_REPORTS else last_df
+
+        # Remove report from similar reports dataframe
+        df = df[df['report_id'] != report.report_id]
+        return df
 
     def retrain(self) -> None:
         pass
@@ -333,11 +339,63 @@ class Clusterizer():
 
 class Classifier():
     
-    def __init__(self) -> None:
-        pass
+    def __init__(self, classifier=None, vectorizer=None) -> None:
+        """
+        If no classifier is provided, it loads the default classifier.
+        If no vectorizer is provided, it loads the default vectorizer.
+        """
+        self.__CLASSIFIER = classifier if classifier else load_obj(
+            f"{CLASSIFIER_PATH}/rfc-default.pkl")
+        self.__VECTORIZER = vectorizer if vectorizer else load_obj(
+            f"{RESOURCES_PATH}/vectorizer-default.pkl")
 
-    def classify(self, text: str) -> list:
-        pass
-        
+    def __build_dataframe(self, report: TokenizedReport, similar_reports: pd.DataFrame) -> pd.DataFrame:
+        """
+        Builds the dataframe containing the pairs <report>-<similar_reports_elements>
+        Args:
+            report (TokenizedReport): the report to analyze
+            similar_reports (pd.DataFrame): list of similar reports, obtained after clustering
+        Returns:
+            pd.DataFrame: list of pairs.
+        """
+        # Create base dataframe
+        columns = [
+            'analyzed_report_id', 'similar_report_id', 'similar_report_summary',
+            'similar_report_component', 'tokens']
+        df = pd.DataFrame(columns=columns)
+        # Create pairs
+        for i, row in similar_reports.iterrows():
+            report_id = row['report_id']
+            summary = row['summary']
+            component = row['component']
+            tokens = row['tokens'] + report.tokens
+            pair_df = pd.DataFrame([[
+                report.report_id, report_id, summary, component, tokens
+            ]], columns=columns)
+            df = pd.concat([df, pair_df])
+        return df
+
+    def get_possible_duplicates(self, report: TokenizedReport, similar_reports: pd.DataFrame) -> pd.DataFrame:
+        """
+        Takes a tokenized report and a dataframe containing the similar reports.
+        Builds a dataframe with the possible pairs.
+        Classify each pair and returns the ones that are two duplicate reports.
+        Args:
+            report (TokenizedReport): The new report to clusterize. Must have 'tokens' and 'report_id'
+            similar_reports (pd.DataFrame): list of reports in the same cluster as the new report
+        Return:
+            pd.DataFrame: list of reports that are duplicates of the new report
+        """
+        # Build pairs dataframe
+        df = self.__build_dataframe(report, similar_reports)
+        # Transform tokens into features
+        features = self.__VECTORIZER.vectorize(df['tokens'])
+        # Predict
+        df['duplicate'] = self.__CLASSIFIER.predict(features)
+        # Filter the dataframe to get the reports that are duplicates
+        df = df[df['duplicate'] == 1]
+        # Return reports
+        return similar_reports[similar_reports['report_id'].isin(df['similar_report_id'])]
+
     def retrain(self) -> None:
         pass
