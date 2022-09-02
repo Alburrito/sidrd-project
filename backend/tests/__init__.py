@@ -10,6 +10,8 @@ PORT = int(environ.get("TEST_DB_PORT", '27017'))
 DB_NAME = environ.get("TEST_DB_NAME", "testing_bug_reports_db")
 REPORTS_COLLECTION = environ.get("TEST_DB_REPORT_COLLECTION", "testing_bug_reports")
 TOKENIZED_COLLECTION = environ.get("TEST_DB_TOKENIZED_COLLECTION", "testing_tokenized_bug_reports")
+
+# Replace db values with test values
 environ['DB_HOST'] = HOST
 environ['DB_PORT'] = str(PORT)
 environ['DB_NAME'] = DB_NAME
