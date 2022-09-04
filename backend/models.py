@@ -391,3 +391,30 @@ class TokenizedReport(Report):
             raise NoReportsFound()
 
         return num_deleted
+
+
+    def get_highest_id() -> int:
+        """
+        Get the highest report_id in the database.
+        Returns:
+            The highest report_id.
+        Exceptions:
+            NoReportsFound. If there are no reports in the database.
+        Example:
+            >>> highest_id = TokenizedReport.get_highest_id()
+        """
+        report = tokenized_collection.find_one({}, sort=[("report_id", -1)])
+        if report is None:
+            raise NoReportsFound()
+        return report["report_id"]
+
+
+    def get_number_of_reports() -> int:
+        """
+        Get the number of reports in the database.
+        Returns:
+            The number of reports.
+        Example:
+            >>> num_reports = TokenizedReport.get_number_of_reports()
+        """
+        return tokenized_collection.count_documents({})

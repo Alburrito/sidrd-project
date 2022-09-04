@@ -216,6 +216,6 @@ class TestSIDRD(BaseTest):
         test_db_reports = get_tokenized_reports(limit=50)
 
         report, duplicates = sidrd.get_duplicates(rep, test_db_reports)
-        self.assertIn(r3.report_id, [dup.report_id for dup in duplicates])
+        self.assertIn(r3.report_id, [dup['report_id'] for dup in duplicates])
         self.assertIsNotNone(report.text)
         self.assertIsNotNone(report.tokens)
