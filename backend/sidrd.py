@@ -1,10 +1,5 @@
 """Module for SIDRD funcionality."""
 from datetime import datetime
-from typing import Optional
-from controllers import (
-    get_tokenized_report as get_tokenized_report_controller,
-    get_tokenized_reports as get_tokenized_reports_controller
-)
 from models import TokenizedReport
 from string import punctuation
 
@@ -225,8 +220,8 @@ class Clusterizer():
     __REP_CLU = 'REPORTS_PER_CLUSTER'
     __REC_LVL = 'RECURSIVITY_LEVEL'
 
-    def __init__(self, vectorizer: Vectorizer = None, n_clusters: int = 3, 
-            limit: int = 4, mode: str = __REC_LVL, min_reports_per_cluster = 3
+    def __init__(self, vectorizer: Vectorizer = None, n_clusters: int = 2, 
+            limit: int = 5, mode: str = __REC_LVL, min_reports_per_cluster = 3
         ):
         self.__VECTORIZER = vectorizer if vectorizer else load_obj(
             f'{RESOURCES_PATH}/vectorizer-default.pkl')
@@ -247,38 +242,35 @@ class Clusterizer():
             pd.DataFrame: Dataframe with the reports data.
         """
         # Create base dataframe
-        columns = ['report_id', 'creation_time', 'status', 'component', 'summary', 'comments', 'text', 'tokens']
+        columns = ['report_id', 'dupe_of', 'creation_time', 'status', 'component', 'summary', 'comments', 'text', 'tokens']
         df = pd.DataFrame(columns=columns)
         # Add DB reports
         for rep in reports:
             rep_df = pd.DataFrame([[
-                rep.report_id, rep.creation_time, rep.status, rep.component,
+                rep.report_id, rep.dupe_of, rep.creation_time, rep.status, rep.component,
                 rep.summary, rep.comments, rep.text, rep.tokens
             ]], columns=columns)
             df = pd.concat([df, rep_df])
         # Add analyzed report
         rep_df = pd.DataFrame([[
-            report.report_id, report.creation_time, report.status,
+            report.report_id, report.dupe_of, report.creation_time, report.status,
             report.component, report.summary, report.comments,
             report.text, report.tokens
         ]], columns=columns)
         df = pd.concat([df, rep_df])
         return df
 
-    def clusterize(self, report: TokenizedReport, test_reports: Optional[list]=None) -> pd.DataFrame:
+    def clusterize(self, report: TokenizedReport, reports_db: list) -> pd.DataFrame:
         """
         Receives a list of features representing a new report.
         Obtains the tokens of the reports in DB, transforms them into features.
         Clusters the features iteratively.
         Args:
             report (TokenizedReport): The new report to clusterize. Must have 'tokens' and 'report_id'
-            test_reports (list): list of reports to clusterize. Simulates DB reports (TokenizedReport) elements.
-                If test_reports is not provided, the reports in the DB are used.
+            reports_db (list): list of reports to clusterize. TokenizedReport elements.
         Returns:
             pd.DataFrame: list of reports in the same cluster as the new report
         """
-        # Obtain tokens of the reports in DB
-        reports_db = test_reports if test_reports else get_tokenized_reports_controller(limit=5000)
         # Build dataframe
         df = self.__build_reports_dataframe(reports_db, report)
 
@@ -379,6 +371,8 @@ class Classifier():
 
 class SIDRD():
 
+    __MAX_REPORTS_TO_SHOW = 10
+
     def __init__(self, tokenizer: Tokenizer = None, vectorizer: Vectorizer = None,
                     clusterizer: Clusterizer = None, classifier: Classifier = None):
         self.tokenizer = tokenizer if tokenizer else Tokenizer(default_mode = 'stem')
@@ -387,26 +381,42 @@ class SIDRD():
         self.classifier = classifier if classifier else load_obj(f'{RESOURCES_PATH}/classifier-default.pkl')
 
     
-    def __dataframe_to_tokenized_reports(self, df: pd.DataFrame) -> list:
+    def __dataframe_to_dictionary_reports(self, df: pd.DataFrame) -> list:
         """
-        Searches in BD for the reports and returns the list of TokenizedReport objects
+        Searches in BD for the reports and returns the list of dictionaries with keys 'report_id', 'summary', 'component' and 'description'
         Args:
             df (pd.DataFrame): dataframe to convert
         Returns:
-            list: list of TokenizedReport
+            list: list of dicts
         """
-        return [get_tokenized_report_controller(row['report_id']) for i, row in df.iterrows()]
+        return [{
+            'report_id': row['report_id'],
+            'dupe_of': row['dupe_of'],
+            'creation_time': row['creation_time'],
+            'component': row['component'],
+            'summary': row['summary'],
+            'description': row['comments']
+        } for i, row in df.iterrows()]
 
-    def get_duplicates(self, report: TokenizedReport, test_reports: Optional[list]=None) -> None:
+    def get_duplicates(self, report: TokenizedReport, reports_db: list) -> tuple:
         """
         Takes a tokenized report and returns the possible duplicates.
+        Args:
+            report (TokenizedReport): The new report to clusterize. Must have 'tokens' and 'report_id'
+            reports_db (list): list of reports in the database. TokenizedReport objects
+        Return:
+            tuple: 
+                - report tokenized
+                - list of possible duplicates (dictionaries with keys 'report_id', 'summary', 'component', 'description')
         """
         text = report.summary + ' ' + report.component
         report.text = text
         report.tokens = self.tokenizer.tokenize(text)
-        similar_reports = self.clusterizer.clusterize(report, test_reports)
+        similar_reports = self.clusterizer.clusterize(report, reports_db)
         duplicates = self.classifier.get_possible_duplicates(report, similar_reports)
-        return report, self.__dataframe_to_tokenized_reports(duplicates)
+        duplicates = duplicates.sort_values(by=['creation_time'], ascending=False)
+        duplicates = duplicates[:self.__MAX_REPORTS_TO_SHOW] if self.__MAX_REPORTS_TO_SHOW < len(duplicates) else duplicates
+        return report, self.__dataframe_to_dictionary_reports(duplicates)
     
     def retrain(self) -> None:
         pass

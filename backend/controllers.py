@@ -1,8 +1,9 @@
 """Module for controllers."""
 from datetime import datetime
 
+from exceptions import NoReportsFound, ReportAlreadyExists, ReportNotFound
 from models import Report, TokenizedReport
-from exceptions import ReportAlreadyExists
+from sidrd import SIDRD
 
 # CRUD Reports
 
@@ -276,3 +277,83 @@ def delete_all_tokenized_reports() -> int:
         >>> num_deleted = delete_all_tokenized_reports()
     """
     return TokenizedReport.delete_all() # May raise NoReportsFound
+
+def get_number_of_reports() -> int:
+    """
+    Get the number of reports in the database.
+    Returns:
+        int: number of reports.
+    Example:
+        >>> num_reports = get_number_of_reports()
+    """
+    return TokenizedReport.get_number_of_reports()
+
+###############################################################################
+
+# CLI Create Report
+
+sidrd = SIDRD()
+
+def get_highest_id() -> int:
+    """
+    Get the highest report id in the database.
+    Returns:
+        int: highest report id.
+    Example:
+        >>> highest_id = get_highest_id()
+    """
+    return TokenizedReport.get_highest_id()
+
+def cli_get_possible_duplicates(component: str, summary: str, description: str) -> tuple:
+    """
+    Gets the similar report to the one is wanted to be stored.
+    Uses SIDRD to get the possible duplicates
+    Args:
+        component: component of the report.
+        summary: summary of the report.
+        description: description of the report.
+    Returns:
+        tuple: 
+            - report processed by SIDRD (TokenizedReport)
+            - list of possible duplicates (dictionaries with report_id, component, summary, description, creation_time)
+    Example:
+        >>> report, similar_reports = cli_get_possible_duplicates('Core', 'Summary', 'Description')
+    """
+    highest_id = get_highest_id() # May raise NoReportsFound
+    report = TokenizedReport(
+        report_id=highest_id+1, creation_time=datetime.now(), status="NEW", 
+        component=component, dupe_of=None, summary=summary, comments= description,
+        text="", tokens=[]
+    )
+    try:
+        reports_to_compare = get_tokenized_reports(limit=0)
+    except NoReportsFound:
+        return report, []
+    return sidrd.get_duplicates(report, reports_to_compare)
+
+def cli_create_report(report: TokenizedReport, dupe_of: int) -> None:
+    """
+    Create a report in the database.
+    Args:
+        report: report to be created (TokenizedReport)
+        dupe_of: id of the report this is a duplicate of. 0 if not a duplicate.
+    Exceptions:
+        ReportAlreadyExists. If the report already exists.
+    Example:
+        >>> report = cli_create_report(report, dupe_of)
+    """
+    if dupe_of == 0:
+        dupe_of = None
+    else:
+        try:
+            master = get_tokenized_report(report_id=dupe_of)
+            dupe_of = master.report_id
+        except ReportNotFound:
+            pass # dupe_of = dupe_of
+
+    report.dupe_of = dupe_of if dupe_of != 0 else None
+
+    report = create_tokenized_report(
+                        report.report_id, report.creation_time, 
+                        report.status, report.component, report.dupe_of, 
+                        report.summary, report.comments, report.text, report.tokens) # May raise ReportAlreadyExists
