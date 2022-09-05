@@ -1,21 +1,25 @@
 """Module for SIDRD funcionality."""
-from datetime import datetime
+import random
 from models import TokenizedReport
 from string import punctuation
 
 import pickle
 import pandas as pd
+import numpy as np
 
 import nltk
 nltk.download('omw-1.4')
 from nltk.corpus import stopwords
 from nltk.stem import WordNetLemmatizer, SnowballStemmer
 
-from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.cluster import KMeans
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import GridSearchCV
 
 
 RESOURCES_PATH = 'resources'
+TOKENIZER_PATH = 'resources/tokenizer'
 VECTORIZER_PATH = 'resources/vectorizer'
 CLUSTERIZER_PATH = 'resources/clusterizer'
 CLASSIFIER_PATH = 'resources/classifier'
@@ -175,6 +179,19 @@ class Tokenizer():
         elif p_mode == 'lemmatize':
             p_text = self.__lemmatize(p_text)
         return [t for t in p_text if t not in ['', ' ']]
+    
+    def retrain(self, new_config: dict):
+        """
+        Updates the tokenizer with the new config.
+        Args:
+            new_config (dict): New config to use.
+        """
+        self.__DEFAULT_MODE = new_config['default_mode']
+        self.__EXTRA_CHARACTERS = new_config['extra_characters']
+        self.__URL_FORBIDDEN_CHARS = new_config['url_forbidden_chars']
+        self.__CUSTOM_WORDS = new_config['custom_words']
+        self.__LEMMATIZER_PASS_TOKENS = new_config['lemmatizer_pass_tokens']
+        self.__STEMMER_PASS_TOKENS = new_config['stemmer_pass_tokens']
 
 
 class Vectorizer():
@@ -207,13 +224,14 @@ class Vectorizer():
         Args:
             tokens_lists (list): List of lists of tokens. (each token list is a report)
         Returns:
-            list: list of Tf-idf-weighted document-term matrix.
+            list: list of Tf-idf-weighted document-term matrix in a numpy array
         """
         x = [' '.join(tokens) for tokens in tokens_lists]
         self.__VECTORIZER = TfidfVectorizer()
         features = self.__VECTORIZER.fit_transform(x)
-        dump_obj(self.__VECTORIZER, f'{VECTORIZER_PATH}/retrain_{datetime.now()}.pkl')
+        dump_obj(self.__VECTORIZER, f'{VECTORIZER_PATH}/tfidf.pkl')
         return features
+
 
 class Clusterizer():
 
@@ -300,9 +318,18 @@ class Clusterizer():
         df = df[df['report_id'] != report.report_id]
         return df
 
-    def retrain(self) -> None:
-        pass
-
+    def retrain(self, vectorizer: Vectorizer, new_config: dict) -> None:
+        """
+        Retrains the clusterizer with new parameters.
+        Args:
+            vectorizer (Vectorizer): Vectorizer to use.
+            new_config (dict): Dictionary with the new parameters.
+        """
+        self.__VECTORIZER = vectorizer
+        self.__N_CLUSTERS = new_config['n_clusters']
+        self.__LIMIT = new_config['limit']
+        self.__MODE = new_config['mode']
+        self.__MIN_REPORTS = new_config['min_reports_per_cluster']
 
 
 class Classifier():
@@ -342,6 +369,68 @@ class Classifier():
             ]], columns=columns)
             df = pd.concat([df, pair_df])
         return df
+    
+    def __build_retrain_dataframe(self, report_set: list, per_duplicate_pairs: float, verbose: bool = True) -> pd.DataFrame:
+        """
+        Builds the dataframe containing the pairs <report>-<similar_reports_elements>
+        Args:
+            report_set (list): list of TokenizedReport elements
+            per_duplicate_pairs (float): percentage of duplicate pairs to include in the dataframe
+            verbose (bool): if True, prints the progress
+        Returns:
+            pd.DataFrame: list of pairs.
+        """
+        n_reports = len(report_set)
+        n_duplicates = int(n_reports * per_duplicate_pairs)
+        n_non_duplicates = n_reports - n_duplicates
+
+        duplicates = [report for report in report_set if str(report.dupe_of) != 'nan']
+        masters = [report for report in report_set if str(report.dupe_of) == 'nan']
+
+        # Create base dataframe
+        columns = ["tokens", "duplicate"]
+        df = pd.DataFrame(columns=columns)
+
+        if verbose:
+            print(f"\t[+] Number of duplicate pairs to create: {n_duplicates}")
+            print(f"\t[+] Number of non-duplicate pairs to create: {n_non_duplicates}")
+            print(f"\t[+] Number of available reports: {n_reports} ({len(duplicates)} duplicates, {len(masters)} masters)")
+            print("\t[*] Creating duplicate pairs...")
+
+        # Add duplicate pairs
+        for report in duplicates:
+            try:
+                master = [master for master in masters if master.report_id == report.dupe_of][0]
+                tokens = report.tokens + master.tokens
+                df = pd.concat([df, pd.DataFrame([[tokens, 1]], columns=columns)])
+            except IndexError:
+                pass
+            
+            if len(df) >= n_duplicates:
+                break
+        if verbose:
+            print(f"\t[+] Created {len(df)} duplicate pairs")
+            print("\t[*] Creating non-duplicate pairs...")
+
+        # Add master pairs
+        added = 0
+        while added < n_non_duplicates:
+            master1 = random.choice(masters)
+            master2 = random.choice(masters)
+            if master1.report_id != master2.report_id:
+                tokens = master1.tokens + master2.tokens
+                if tokens not in df['tokens'].values:
+                    df = pd.concat([df, pd.DataFrame([[tokens, 0]], columns=columns)])
+                    added += 1
+        
+        df = df.sample(frac=1).reset_index(drop=True)
+
+        if verbose:
+            print(f"\t[+] Created {added} non-duplicate pairs")
+            print("\t[*] Shuffling dataframe...")
+            print(f"\t[+] Done. Created {len(df)} pairs")
+
+        return df
 
     def get_possible_duplicates(self, report: TokenizedReport, similar_reports: pd.DataFrame) -> pd.DataFrame:
         """
@@ -365,20 +454,67 @@ class Classifier():
         # Return reports
         return similar_reports[similar_reports['report_id'].isin(df['similar_report_id'])]
 
-    def retrain(self) -> None:
-        pass
+    def retrain(self, vectorizer: Vectorizer, report_set: list, new_config: dict, verbose: bool=True) -> None:
+        """
+        Retrains the classifier with new vectorizer and features
+        Args:
+            vectorizer (Vectorizer): Vectorizer to use.
+            report_set (list): list of reports to train the classifier.
+            new_config (dict): Dictionary with the parameters to use.
+            verbose (bool): If True, adds verbosity to the process.
+        """
+        if verbose:
+            print("\t[*] Building pairs dataframe...")
+        per_duplicate_pairs = new_config['per_duplicate_pairs']
+        df = self.__build_retrain_dataframe(report_set, per_duplicate_pairs)
+        if verbose:
+            print("\t[+] Done.")
+        
+        if verbose:
+            print("\t[*] Vectorizing tokens...")
+        self.__VECTORIZER = vectorizer
+        features = self.__VECTORIZER.vectorize(df['tokens'])
+        if verbose:
+            print("\t[+] Done.")
+
+        param_grid = new_config['param_grid']
+        rfc = RandomForestClassifier()
+        if verbose:
+            print(f"\t[+] Searching for best parameters with grid: {param_grid}")
+
+        verbosity = 1 if verbose else 0
+        gs = GridSearchCV(rfc, param_grid, cv=5, n_jobs=-1, refit=True, verbose=verbosity)
+        if verbose:
+            print("\t[*] GridSearchCV process started.")
+        gs.fit(features, df['duplicate'].astype('int'))
+
+        self.__CLASSIFIER = gs.best_estimator_
+        dump_obj(self.__CLASSIFIER, f"{CLASSIFIER_PATH}/rfc.pkl")
+        if verbose:
+            print("\t[+] GridSearchCV process finished.")
+            print(f"\t[+] Best parameters: {gs.best_params_}")
 
 
 class SIDRD():
 
     __MAX_REPORTS_TO_SHOW = 10
 
-    def __init__(self, tokenizer: Tokenizer = None, vectorizer: Vectorizer = None,
-                    clusterizer: Clusterizer = None, classifier: Classifier = None):
-        self.tokenizer = tokenizer if tokenizer else Tokenizer(default_mode = 'stem')
-        self.vectorizer = vectorizer if vectorizer else load_obj(f'{RESOURCES_PATH}/vectorizer-default.pkl')
-        self.clusterizer = clusterizer if clusterizer else load_obj(f'{RESOURCES_PATH}/clusterizer-default.pkl')
-        self.classifier = classifier if classifier else load_obj(f'{RESOURCES_PATH}/classifier-default.pkl')
+    def __init__(self, default_model: bool = True,
+                tokenizer: Tokenizer = None, vectorizer: Vectorizer = None,
+                clusterizer: Clusterizer = None, classifier: Classifier = None):
+        """
+        If default_model, uses the default model. Otherwise, uses the latest trained ones
+        """
+        if default_model:
+            self.tokenizer = tokenizer if tokenizer else load_obj(f"{RESOURCES_PATH}/tokenizer-default.pkl")
+            self.vectorizer = vectorizer if vectorizer else load_obj(f'{RESOURCES_PATH}/vectorizer-default.pkl')
+            self.clusterizer = clusterizer if clusterizer else load_obj(f'{RESOURCES_PATH}/clusterizer-default.pkl')
+            self.classifier = classifier if classifier else load_obj(f'{RESOURCES_PATH}/classifier-default.pkl')
+        else:
+            self.tokenizer = tokenizer if tokenizer else load_obj(f'{RESOURCES_PATH}/tokenizer.pkl')
+            self.vectorizer = vectorizer if vectorizer else load_obj(f'{RESOURCES_PATH}/vectorizer.pkl')
+            self.clusterizer = clusterizer if clusterizer else load_obj(f'{RESOURCES_PATH}/clusterizer.pkl')
+            self.classifier = classifier if classifier else load_obj(f'{RESOURCES_PATH}/classifier.pkl')
 
     
     def __dataframe_to_dictionary_reports(self, df: pd.DataFrame) -> list:
@@ -409,7 +545,7 @@ class SIDRD():
                 - report tokenized
                 - list of possible duplicates (dictionaries with keys 'report_id', 'summary', 'component', 'description')
         """
-        text = report.summary + ' ' + report.component
+        text = self.tokenizer.generate_text(report, 'SC')
         report.text = text
         report.tokens = self.tokenizer.tokenize(text)
         similar_reports = self.clusterizer.clusterize(report, reports_db)
@@ -418,5 +554,48 @@ class SIDRD():
         duplicates = duplicates[:self.__MAX_REPORTS_TO_SHOW] if self.__MAX_REPORTS_TO_SHOW < len(duplicates) else duplicates
         return report, self.__dataframe_to_dictionary_reports(duplicates)
     
-    def retrain(self) -> None:
-        pass
+    def retrain(self, reports_set: list, new_config: dict, verbose: bool=True) -> None:
+        """
+        Retrains the SIDRD components with the new reports.
+        Args:
+            reports_set (list): list of reports to retrain the model
+            new_config (dict): dictionary with the new configuration
+            verbose (bool): if True, prints the progress
+        """
+        if verbose:
+            print('[*] Reconfiguring tokenizer...')
+        # Tokenizer component loads new config
+        self.tokenizer.retrain(new_config['tokenizer'])
+        # Use the new values to generate the new tokens
+        tokens = [self.tokenizer.tokenize(report.text) for report in reports_set]
+        # Persist new tokenizer
+        dump_obj(self.tokenizer, f"{RESOURCES_PATH}/tokenizer.pkl")
+        if verbose:
+            print(f'[+] Done. Stored in {RESOURCES_PATH}/tokenizer.pkl')
+
+        if verbose:
+            print('[*] Retraining vectorizer...')
+        # Train another vectorizer with the new tokens and get the new features
+        features = self.vectorizer.retrain(tokens)
+        # Persist new vectorizer
+        dump_obj(self.vectorizer, f"{RESOURCES_PATH}/vectorizer.pkl")
+        if verbose:
+            print(f'[+] Done. Stored in {RESOURCES_PATH}/vectorizer.pkl')
+
+        if verbose:
+            print('[*] Reconfiguring clusterizer...')
+        # Clusterizer component loads the new config
+        self.clusterizer.retrain(self.vectorizer, new_config['clusterizer'])
+        # Persist new clusterizer
+        dump_obj(self.clusterizer, f"{RESOURCES_PATH}/clusterizer.pkl")
+        if verbose:
+            print(f'[+] Done. Stored in {RESOURCES_PATH}/clusterizer.pkl')
+
+        if verbose:
+            print('[*] Retraining classifier...')
+        # Train another classifier 
+        self.classifier.retrain(self.vectorizer, reports_set, new_config['classifier'], verbose)
+        # Persist new classifier
+        dump_obj(self.classifier, f"{RESOURCES_PATH}/classifier.pkl")
+        if verbose:
+            print(f'[+] Done. Stored in {RESOURCES_PATH}/classifier.pkl')

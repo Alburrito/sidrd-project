@@ -1,5 +1,6 @@
 """Module for controllers."""
 from datetime import datetime
+import json
 
 from exceptions import NoReportsFound, ReportAlreadyExists, ReportNotFound
 from models import Report, TokenizedReport
@@ -292,8 +293,6 @@ def get_number_of_reports() -> int:
 
 # CLI Create Report
 
-sidrd = SIDRD()
-
 def get_highest_id() -> int:
     """
     Get the highest report id in the database.
@@ -304,7 +303,7 @@ def get_highest_id() -> int:
     """
     return TokenizedReport.get_highest_id()
 
-def cli_get_possible_duplicates(component: str, summary: str, description: str) -> tuple:
+def cli_get_possible_duplicates(component: str, summary: str, description: str, default_model: bool=True) -> tuple:
     """
     Gets the similar report to the one is wanted to be stored.
     Uses SIDRD to get the possible duplicates
@@ -312,6 +311,7 @@ def cli_get_possible_duplicates(component: str, summary: str, description: str) 
         component: component of the report.
         summary: summary of the report.
         description: description of the report.
+        default_model: if True, use the default model. If False, use the last trained model
     Returns:
         tuple: 
             - report processed by SIDRD (TokenizedReport)
@@ -319,6 +319,7 @@ def cli_get_possible_duplicates(component: str, summary: str, description: str) 
     Example:
         >>> report, similar_reports = cli_get_possible_duplicates('Core', 'Summary', 'Description')
     """
+    sidrd = SIDRD(default_model=default_model)
     highest_id = get_highest_id() # May raise NoReportsFound
     report = TokenizedReport(
         report_id=highest_id+1, creation_time=datetime.now(), status="NEW", 
@@ -357,3 +358,22 @@ def cli_create_report(report: TokenizedReport, dupe_of: int) -> None:
                         report.report_id, report.creation_time, 
                         report.status, report.component, report.dupe_of, 
                         report.summary, report.comments, report.text, report.tokens) # May raise ReportAlreadyExists
+
+
+def retrain_sidrd(config_path: str, verbose: bool = True) -> None:
+    """
+    Retrain SIDRD with the new reports.
+    Args:
+        config_path: path to the config file.
+    Example:
+        >>> retrain_sidrd(config_path, True)
+    """
+    sidrd = SIDRD()
+    try:
+        new_config = json.load(open(config_path))
+        # TODO: The reports to retrain should be chosen after an analysis of the reports
+        report_set = get_tokenized_reports(limit=0)
+        sidrd.retrain(report_set, new_config, verbose)
+    except FileNotFoundError:
+        print("Config file not found")
+
