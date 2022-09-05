@@ -55,6 +55,8 @@ Este fichero debe encontrarse en la carpeta `backend/scraper/config/`
 
 Se guardarán los reportes en la base de datos y aparecerán los resultados de cada lote en un fichero .csv nuevo. en la misma carpeta
 
+<img src="img/scraper.png">
+
 ## Crear reporte nuevo usando SIDRD
 
 Teniendo la base de datos levantada, ejecutar:
@@ -71,6 +73,8 @@ Proporcionará el SIDRD por defecto (utiliza stemming y resumen+componente) pero
 
 Al final del proceso se puede elegir si guardar el reporte en la base de datos o no, además de marcar un duplicado o no.
 
+<img src="img/create.png">
+
 ## Reentrenar el SIDRD
 Rellenar un fichero .json con la configuración del reentreno (ver sidrd_retrain_config.json.sample para un ejemplo).
 
@@ -84,6 +88,8 @@ sidrd-project/backend/$ pipenv shell
 
 El propio script te guiará por el proceso de reentrenamiento del SIDRD, pidiendo el fichero de configuración, ofreciendo un modo verboso para seguir el reentreno.
 
+<img src="img/retrain.png">
+
 ## Tests
 
 Para ejecutar los tests:
@@ -92,3 +98,5 @@ Para ejecutar los tests:
 sidrd-project/backend/$ pipenv shell
 (sidrd-project) sidrd-project/backend/$ pytest -v
 ```
+
+<img src="img/tests.png">
