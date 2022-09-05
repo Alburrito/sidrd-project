@@ -130,10 +130,14 @@ dmypy.json
 
 # Own ignores
 
-## Mongodb
+## Mongodb and models
 data/
 
 ## Testing
 test.py
+test.ipynb
 backend/scraper/config/*
 !backend/scraper/config/*.example
+backend/sidrd_retrain_config.json
+!backend/*.example
+!scraper.log

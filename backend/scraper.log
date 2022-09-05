@@ -1,0 +1,324 @@
+[+]------------------------- SCRAPING MODE SELECTED -------------------------
+[+] Database: bug_reports_db. Collection: bug_reports
+[*] Checking scraper config file...
+[+] Scraper config file OK: scraper/config/scraper_config.csv
+[+] Starting scraper with 36 configs. Expected 5020 reports (4010 master, 1010 duplicate)
+[+]-------------------- Config (1/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2022-04-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:52.702324. Average time: 0:03:52.702324. | Current time: 0:03:52.702324. Remaining time: ~2:15:44.581340
+[+]-------------------- Config (2/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2022-04-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 196 reports
+[+] Config time 0:05:10.634903. Average time: 0:04:31.668614. | Current time: 0:09:03.337227. Remaining time: ~2:33:56.732876
+[+]-------------------- Config (3/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2022-01-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:44.593036. Average time: 0:04:15.976754. | Current time: 0:12:47.930263. Remaining time: ~2:20:47.232882
+[+]-------------------- Config (4/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2022-01-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 195 reports
+[+] Config time 0:05:33.392643. Average time: 0:04:35.330726. | Current time: 0:18:21.322906. Remaining time: ~2:26:50.583232
+[+]-------------------- Config (5/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2021-10-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:51.827919. Average time: 0:04:26.630165. | Current time: 0:22:13.150825. Remaining time: ~2:17:45.535115
+[+]-------------------- Config (6/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2021-10-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 194 reports
+[+] Config time 0:05:04.022678. Average time: 0:04:32.862250. | Current time: 0:27:17.173503. Remaining time: ~2:16:25.867500
+[+]-------------------- Config (7/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2021-07-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:04:12.716440. Average time: 0:04:29.984278. | Current time: 0:31:29.889943. Remaining time: ~2:10:29.544062
+[+]-------------------- Config (8/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2021-07-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 196 reports
+[+] Config time 0:05:04.056184. Average time: 0:04:34.243266. | Current time: 0:36:33.946127. Remaining time: ~2:07:58.811448
+[+]-------------------- Config (9/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2021-04-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:56.281403. Average time: 0:04:30.025281. | Current time: 0:40:30.227530. Remaining time: ~2:01:30.682587
+[+]-------------------- Config (10/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2021-04-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 193 reports
+[+] Config time 0:04:54.479186. Average time: 0:04:32.470672. | Current time: 0:45:24.706716. Remaining time: ~1:58:04.237472
+[+]-------------------- Config (11/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2021-01-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:43.332108. Average time: 0:04:28.003529. | Current time: 0:49:08.038824. Remaining time: ~1:51:40.088225
+[+]-------------------- Config (12/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2021-01-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 193 reports
+[+] Config time 0:05:04.856480. Average time: 0:04:31.074609. | Current time: 0:54:12.895304. Remaining time: ~1:48:25.790616
+[+]-------------------- Config (13/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2020-10-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:04:04.364382. Average time: 0:04:29.019976. | Current time: 0:58:17.259686. Remaining time: ~1:43:07.459448
+[+]-------------------- Config (14/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2020-10-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 192 reports
+[+] Config time 0:05:15.346962. Average time: 0:04:32.329046. | Current time: 1:03:32.606648. Remaining time: ~1:39:51.239012
+[+]-------------------- Config (15/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2020-07-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:04:03.691473. Average time: 0:04:30.419875. | Current time: 1:07:36.298121. Remaining time: ~1:34:38.817375
+[+]-------------------- Config (16/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2020-07-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 196 reports
+[+] Config time 0:05:20.237594. Average time: 0:04:33.533482. | Current time: 1:12:56.535715. Remaining time: ~1:31:10.669640
+[+]-------------------- Config (17/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2020-04-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[!] Could not get master report 1641380. Deleting duplicated report 1627549
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 49 duplicate reports
+[+] Found 49 master reports. Created 0 master reports
+[+] Config time 0:04:01.658142. Average time: 0:04:31.658462. | Current time: 1:16:58.193857. Remaining time: ~1:26:01.510778
+[+]-------------------- Config (18/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2020-04-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 196 reports
+[+] Config time 0:05:31.577893. Average time: 0:04:34.987319. | Current time: 1:22:29.771750. Remaining time: ~1:22:29.771742
+[+]-------------------- Config (19/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2020-01-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[!] Could not get master report 1583441. Deleting duplicated report 1607296
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 49 duplicate reports
+[+] Found 49 master reports. Created 0 master reports
+[+] Config time 0:04:04.144128. Average time: 0:04:33.363994. | Current time: 1:26:33.915878. Remaining time: ~1:17:27.187898
+[+]-------------------- Config (20/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2020-01-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 195 reports
+[+] Config time 0:05:16.931024. Average time: 0:04:35.542345. | Current time: 1:31:50.846902. Remaining time: ~1:13:28.677520
+[+]-------------------- Config (21/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2019-10-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:04:14.371441. Average time: 0:04:34.534207. | Current time: 1:36:05.218343. Remaining time: ~1:08:38.013105
+[+]-------------------- Config (22/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2019-10-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 193 reports
+[+] Config time 0:05:22.155713. Average time: 0:04:36.698821. | Current time: 1:41:27.374056. Remaining time: ~1:04:33.783494
+[+]-------------------- Config (23/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2019-07-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:04:00.044498. Average time: 0:04:35.105155. | Current time: 1:45:27.418554. Remaining time: ~0:59:36.367015
+[+]-------------------- Config (24/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2019-07-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 195 reports
+[+] Config time 0:04:47.696910. Average time: 0:04:35.629811. | Current time: 1:50:15.115464. Remaining time: ~0:55:07.557732
+[+]-------------------- Config (25/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2019-04-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:04:10.628085. Average time: 0:04:34.629742. | Current time: 1:54:25.743549. Remaining time: ~0:50:20.927162
+[+]-------------------- Config (26/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2019-04-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 191 reports
+[+] Config time 0:04:51.006816. Average time: 0:04:35.259629. | Current time: 1:59:16.750365. Remaining time: ~0:45:52.596290
+[+]-------------------- Config (27/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2019-01-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:46.335354. Average time: 0:04:33.447619. | Current time: 2:03:03.085719. Remaining time: ~0:41:01.028571
+[+]-------------------- Config (28/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2019-01-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 191 reports
+[+] Config time 0:04:53.753633. Average time: 0:04:34.172834. | Current time: 2:07:56.839352. Remaining time: ~0:36:33.382672
+[+]-------------------- Config (29/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2018-10-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:43.101440. Average time: 0:04:32.411751. | Current time: 2:11:39.940792. Remaining time: ~0:31:46.882257
+[+]-------------------- Config (30/36) --------------------
+[*] Scraping config: {'limit': '200', 'product': 'firefox', 'creation_time': '2018-10-01', 'resolution': 'FIXED', 'dupe_of': 'None'}
+[+] ...Found 200 reports. Created 193 reports
+[+] Config time 0:04:49.913691. Average time: 0:04:32.995149. | Current time: 2:16:29.854483. Remaining time: ~0:27:17.970894
+[+]-------------------- Config (31/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2018-07-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:50.422074. Average time: 0:04:31.621824. | Current time: 2:20:20.276557. Remaining time: ~0:22:38.109120
+[+]-------------------- Config (32/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2018-04-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:52.440960. Average time: 0:04:30.397422. | Current time: 2:24:12.717517. Remaining time: ~0:18:01.589688
+[+]-------------------- Config (33/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2018-01-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:55.061878. Average time: 0:04:29.326648. | Current time: 2:28:07.779395. Remaining time: ~0:13:27.979944
+[+]-------------------- Config (34/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2017-10-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:44.507605. Average time: 0:04:28.008441. | Current time: 2:31:52.287000. Remaining time: ~0:08:56.016882
+[+]-------------------- Config (35/36) --------------------
+[*] Scraping config: {'limit': '50', 'product': 'firefox', 'creation_time': '2017-07-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 50 reports. Created 50 reports
+[*] Searching for master reports for duplicate ones...
+[*] 10/50 duplicates processed
+[*] 20/50 duplicates processed
+[*] 30/50 duplicates processed
+[*] 40/50 duplicates processed
+[*] 50/50 duplicates processed
+[+] Found 50 duplicate reports. Created 50 duplicate reports
+[+] Found 50 master reports. Created 0 master reports
+[+] Config time 0:03:51.273580. Average time: 0:04:26.958874. | Current time: 2:35:43.560580. Remaining time: ~0:04:26.958874
+[+]-------------------- Config (36/36) --------------------
+[*] Scraping config: {'limit': '10', 'product': 'firefox', 'creation_time': '2017-04-01', 'resolution': 'DUPLICATE'}
+[+] ...Found 10 reports. Created 10 reports
+[*] Searching for master reports for duplicate ones...
+[*] 2/10 duplicates processed
+[*] 4/10 duplicates processed
+[*] 6/10 duplicates processed
+[*] 8/10 duplicates processed
+[*] 10/10 duplicates processed
+[+] Found 10 duplicate reports. Created 10 duplicate reports
+[+] Found 10 master reports. Created 0 master reports
+[+] Config time 0:00:47.463446. Average time: 0:04:20.861778. | Current time: 2:36:31.024026. Remaining time: ~0:00:00
+[+]------------------ Scraping results ------------------
+[+] Scraped 2909 master reports and 1008 duplicate reports.
+[+] Total reports: 3917 out of 5020 expected.
+[+] Scraper finished in 2:36:31.028120
+[+]-------------------------    SCRAPING FINISHED   -------------------------
