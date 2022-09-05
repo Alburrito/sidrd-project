@@ -2,7 +2,6 @@
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 ![Python](https://img.shields.io/badge/python-3.8-blue.svg)
-[![Coverage Status](https://coveralls.io/repos/github/Alburrito/sidrd-project/badge.svg?branch=master)](https://coveralls.io/github/Sulstice/global-chem?branch=master)
 ![Repo Size](https://img.shields.io/github/repo-size/Alburrito/sidrd-project)
 
 
@@ -84,3 +83,12 @@ sidrd-project/backend/$ pipenv shell
 ```
 
 El propio script te guiará por el proceso de reentrenamiento del SIDRD, pidiendo el fichero de configuración, ofreciendo un modo verboso para seguir el reentreno.
+
+## Tests
+
+Para ejecutar los tests:
+
+```bash
+sidrd-project/backend/$ pipenv shell
+(sidrd-project) sidrd-project/backend/$ pytest -v
+```
