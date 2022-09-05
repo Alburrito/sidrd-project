@@ -46,25 +46,6 @@ class TestVectorizer(BaseTest):
         features = vectorizer.vectorize([tokens1, tokens2, tokens3, tokens4])
         self.assertEqual(features.shape, (4, shape))
 
-    # def test_retrain(self):
-    #     tokenizer = Tokenizer()
-    #     vectorizer = Vectorizer()
-
-        # text1 = "(This is the test 1). 8462 : <Also know as TEST1 or test_1.js>. Do not google it in https://google.com :)"
-        # text2 = "I googled test_1.js and there was no way i know it is a test"
-        # text3 = "I found a bug in artifacts.py. I've created a PR in https://gitfoo.com/foo/bar/issues/1"
-        # text4 = "Small typo in artifacts.py:1:16. No need to PR now, but it should be fixed later on some small refactoring"
-
-    #     tokens1 = tokenizer.tokenize(text1, 'stem')
-    #     tokens2 = tokenizer.tokenize(text2, 'stem')
-    #     tokens3 = tokenizer.tokenize(text3, 'stem')
-    #     tokens4 = tokenizer.tokenize(text4, 'stem')
-
-    #     tokens = [tokens1, tokens2, tokens3, tokens4]
-    #     features = vectorizer.retrain(tokens)
-
-    #     self.assertEqual(features.shape, (4, len(vectorizer._Vectorizer__VECTORIZER.get_feature_names_out())))
-
 class TestClusterizer(BaseTest):
     """TestCase class for Clusterizer funcionalities"""
 
